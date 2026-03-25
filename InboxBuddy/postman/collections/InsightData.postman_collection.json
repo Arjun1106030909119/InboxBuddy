@@ -1,0 +1,47 @@
+{
+  "info": {
+    "_postman_id": "d2657ee4-ccbb-4ece-8b2a-85253b7985ea",
+    "name": "InsightData",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "research",
+      "id": "bd7d5853-3314-453f-927a-45751e1e1c60",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"content\": [{ \r\n        \"parts\": [{ \r\n            \"text\": \"Explain how AI work\"\r\n            }]\r\n    }]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=AIzaSyAyClQZaBnKtE4caBbXDFrD4GQdtevJI0E",
+          "protocol": "https",
+          "host": [
+            "generativelanguage",
+            "googleapis",
+            "com"
+          ],
+          "path": [
+            "v1beta",
+            "models",
+            "gemini-flash-latest:generateContent"
+          ],
+          "query": [
+            {
+              "key": "key",
+              "value": "AIzaSyAyClQZaBnKtE4caBbXDFrD4GQdtevJI0E"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}

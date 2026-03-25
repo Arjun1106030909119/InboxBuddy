@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">
+  <defs>
+    <style>
+      .blue1 { fill: #007BFF; }
+      .blue2 { fill: #0056b3; }
+      .text1 { fill: #333333; font-family: 'Helvetica Neue', Arial, sans-serif; font-weight: bold; }
+      .text2 { fill: #666666; font-family: 'Helvetica Neue', Arial, sans-serif; font-weight: normal; }
+    </style>
+  </defs>
+
+  <g transform="translate(50, 75)">
+    <rect x="0" y="0" width="80" height="150" rx="10" class="blue1"/>
+    
+    <rect x="15" y="30" width="50" height="15" rx="5" fill="white"/>
+    <rect x="15" y="60" width="50" height="15" rx="5" fill="white"/>
+    <rect x="15" y="90" width="50" height="15" rx="5" fill="white"/>
+
+    <path d="M75,100 L95,120 L135,70" stroke="#28A745" stroke-width="20" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <g transform="translate(190, 130)">
+    <text x="0" y="0" font-size="52" class="blue1 text1">Inbox</text>
+    
+    <text x="0" y="60" font-size="52" class="text1">Buddy</text>
+    
+    <text x="0" y="95" font-size="18" class="text2">Organize. Automate. Relax.</text>
+  </g>
+</svg>
