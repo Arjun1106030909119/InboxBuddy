@@ -6,6 +6,9 @@ import SendIcon from "@mui/icons-material/Send";
 import axios from 'axios'
 import { useState } from 'react' 
 import './App.css'
+import logo from './assets/file.svg'
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api/email/generate';
 
 
 function App() {
@@ -18,7 +21,7 @@ function App() {
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      const response = await axios.post("http://localhost:8080/api/email/generate", {
+      const response = await axios.post(API_URL, {
         emailContent, tone
       });
       setGenerateReply(typeof response.data === 'string' ? 
@@ -36,7 +39,7 @@ function App() {
     <Container maxWidth="md" sx={{py:4}}>
 
       <Typography variant="h4" component="h1" gutterBottom>
-        <img src="/src/assets/file.svg" alt="Inbox Buddy Logo" width="150" height="100"/>
+        <img src={logo} alt="Inbox Buddy Logo" width="150" height="100"/>
       </Typography>
 
       <Box sx={{mx:3}}>
@@ -58,15 +61,15 @@ function App() {
               label="Tone (Optional)"
               onChange={(e) => setTone(e.target.value)}
             >
-              <MenuItem value="None">None</MenuItem>
+              <MenuItem value="">None</MenuItem>
               <MenuItem value="professional">Professional</MenuItem>
               <MenuItem value="casual">Casual</MenuItem>
-              <MenuItem value="friendly">friendly</MenuItem>
+              <MenuItem value="friendly">Friendly</MenuItem>
             </Select>
           </FormControl>
 
           <Button variant="contained" 
-          onClick={() => handleSubmit(emailContent, tone)} 
+          onClick={handleSubmit}
           disabled={!emailContent || loading } endIcon={<SendIcon />} sx={{mb:4, mt:2}}>
 
               {loading ? <CircularProgress size={24}/>: "Generate Reply"}
@@ -80,7 +83,7 @@ function App() {
         rows={6}
         variant="outlined"
         value={generateReply || ""}
-        inputProps={{readonly: true}}
+        inputProps={{ readOnly: true }}
         sx={{ mb:2 }}/>
 
         <Button 

@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: inboxbuddy-api
+    runtime: docker
+    plan: free
+    dockerfilePath: ./InboxBuddy/Dockerfile
+    dockerContext: ./InboxBuddy
+    healthCheckPath: /api/email/health
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_API_URL
+        value: https://generativelanguage.googleapis.com
+      - key: GEMINI_API_MODEL
+        value: gemini-3.5-flash-lite
+
+  - type: web
+    name: inboxbuddy-web
+    runtime: static
+    rootDir: InboxBuddy-frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://inboxbuddy-api.onrender.com/api/email/generate

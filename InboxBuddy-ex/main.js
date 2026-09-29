@@ -1,112 +1,89 @@
-console.log("InboxBuddy- AI-powered email reply assistant");
+console.log('InboxBuddy: AI email reply assistant loaded');
 
-function getEmailContent() {
-    const selectors=[
-        '.h7', '.a3s.ail', '.gmail_quote', '[role="presentation"]'
-    ];
-    for(const selector of selectors){
-        const content = document.querySelector(selector);
-        if(content){
-            return content.innerText.trim();
-        }
-        return '';
-    }
+const API_URL = 'https://inboxbuddy-api.onrender.com/api/email/generate';
+
+function getEmailContent(composeRoot) {
+    const candidates = Array.from(document.querySelectorAll('.a3s.ail, .h7, .gmail_quote'))
+        .filter((element) => !composeRoot?.contains(element))
+        .map((element) => element.innerText.trim())
+        .filter(Boolean);
+    return candidates.at(-1) || '';
 }
 
-function findComposeToolbar() {
-    const selectors = [
-        '.btC', // Gmail's older compose toolbar
-        '.aDh', // Gmail's new compose toolbar
-        '[role="toolbar"]', // Compose toolbar within a dialog
-        '.gU-Up' // Gmail's mobile compose toolbar
-    ];
-    for(const selector of selectors){
-        const toolbar = document.querySelector(selector);
-        if(toolbar){
-            return toolbar;
-        }
-        return null;
-    }
+function findComposeRoot(toolbar) {
+    return toolbar.closest('[role="dialog"], .aoI, .M9') || toolbar.parentElement;
 }
 
-function createAIButton(params) {
-    const button = document.createElement('div');
-    button.className= 'T-I J-J5-Ji aoO v7 T-I-atl L3 ai-reply-button';
+function findComposeToolbar(root = document) {
+    return root.querySelector('.btC, .aDh, .gU-Up');
+}
+
+function findComposeBox(root) {
+    return root.querySelector(
+        '[role="textbox"][g_editable="true"], [role="textbox"][contenteditable="true"], [contenteditable="true"]'
+    );
+}
+
+function createAIButton() {
+    const button = document.createElement('button');
+    button.className = 'T-I J-J5-Ji aoO v7 T-I-atl L3 ai-reply-button';
+    button.type = 'button';
     button.style.marginRight = '8px';
-    button.innerText = 'AI Reply';
-    button.setAttribute('role', 'button');
+    button.textContent = 'AI Reply';
     button.setAttribute('data-tooltip', 'Generate AI Reply');
     return button;
 }
 
-function injectButton(){
-    const existingButton = document.querySelector('.ai-reply-button');
-    if(existingButton) {existingButton.remove();}
+function setComposeText(composeBox, text) {
+    composeBox.focus();
+    const inserted = document.execCommand('insertText', false, text);
+    if (!inserted) composeBox.textContent = text;
+    composeBox.dispatchEvent(new InputEvent('input', {
+        bubbles: true, inputType: 'insertText', data: text
+    }));
+}
 
-    const toolbar = findComposeToolbar();
-    if(!toolbar){
-        console.log("Toolbar not found");
-        return;
-    }
+function injectButton(toolbar) {
+    if (!toolbar || toolbar.querySelector('.ai-reply-button')) return;
 
-    console.log("Toolbar found");
+    const composeRoot = findComposeRoot(toolbar);
     const button = createAIButton();
-    button.classList.add('ai-reply-button');
-
     button.addEventListener('click', async () => {
+        const originalLabel = button.textContent;
         try {
-            button.innerHTML = 'Generating...';
+            button.textContent = 'Generating...';
             button.disabled = true;
-            const emailContent = getEmailContent();
+            const emailContent = getEmailContent(composeRoot);
+            if (!emailContent) throw new Error('Open an email thread before generating a reply.');
 
-            const response = await fetch('http://localhost:8080/api/email/generate', {
+            const response = await fetch(API_URL, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    emailContent: emailContent,
-                    tone: "professional"
-                })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ emailContent, tone: 'professional' }),
+                signal: AbortSignal.timeout(30000)
             });
+            const responseText = await response.text();
+            if (!response.ok) throw new Error(responseText || `Backend request failed (${response.status})`);
+            if (!responseText.trim()) throw new Error('Backend returned an empty reply.');
 
-            if (!response.ok) {
-                throw new Error('API Request Failed');
-            }
-
-            const generatedReply = await response.text();
-            const composeBox = document.querySelector('[role="textbox"][g_editable="true"]');
-
-            if (composeBox) {
-                composeBox.focus();
-                document.execCommand('insertText', false, generatedReply);
-            } else {
-                console.error('Compose box was not found');
-            }
+            const composeBox = findComposeBox(composeRoot);
+            if (!composeBox) throw new Error('Gmail compose box was not found.');
+            setComposeText(composeBox, responseText);
         } catch (error) {
-            console.error(error);
-            alert('Failed to generate reply');
+            console.error('InboxBuddy failed to generate reply:', error);
+            alert(`InboxBuddy: ${error.message}`);
         } finally {
-            button.innerHTML = 'AI Reply';
-            button.disabled =  false;
+            button.textContent = originalLabel;
+            button.disabled = false;
         }
     });
-    
-    toolbar.insertBefore(button, toolbar.firstChild)
+    toolbar.insertBefore(button, toolbar.firstChild);
 }
-const observer = new MutationObserver((mutations) => {
-    for(const mutation of mutations) {
-        const addedNodes = Array.from(mutation.addedNodes);
-        const hasComposeElements = addedNodes.some(node =>
-            node.nodeType === Node.ELEMENT_NODE && 
-            (node.matches('.aDh, .btC, [role="dialog"]') || node.querySelector('.aDh, .btC, [role="dialog"]'))
-        );
 
-        if (hasComposeElements) {
-            console.log("Compose Window Detected");
-            setTimeout(injectButton, 500);
-        }
-    }
-});
+function scanForComposeWindows() {
+    document.querySelectorAll('.btC, .aDh, .gU-Up').forEach(injectButton);
+}
 
+const observer = new MutationObserver(() => window.requestAnimationFrame(scanForComposeWindows));
 observer.observe(document.body, { childList: true, subtree: true });
+scanForComposeWindows();
